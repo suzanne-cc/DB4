@@ -19,6 +19,7 @@ MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
 flow_rate = MQTT.make_feed(b'flow-rate')
+od_feed = MQTT.make_feed(b'od-feed')
 
 # ------ Variables to be Defined ------
 OD_TO_CELLS_SLOPE = 1.0e7
@@ -138,12 +139,13 @@ def equalize():
 while True:
     MQTT.check_messages(client)
 
-    od = measure_OD()
+    od_measured = measure_OD()
 
-    if od is not None:
-        speed = pump_speed_from_od(od)
+    if od_measured is not None:
+        speed = pump_speed_from_od(od_measured)
         pump_to_mussel(speed)
-        MQTT.publish(client, flow_rate, speed)
+        MQTT.publish(client, flow_rate, speed) # publish data to adaFruit
+        MQTT.publish(client, od_feed, od_measured) # publish data to adaFruit
     else:
         pump_stop()
 
