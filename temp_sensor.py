@@ -15,9 +15,21 @@ client = MQTT.connect_mqtt()
 feed_temp = MQTT.make_feed(b'temperature')
 feed_pid  = MQTT.make_feed(b'PID-output')
 
-# ---------- PID ----------
-TARGET_TEMP = 17.0 # desired temperature in Celsius
+# ------ Update Target Temperature -------
+TARGET_TEMP = 17.0  # default until updated from dashboard
+feed_target_temp = MQTT.make_feed(b'target-temp')
 
+def update_temp(topic, msg):
+    global TARGET_TEMP
+    try:
+        TARGET_TEMP = float(msg.decode('utf-8'))
+        print('Target temp updated to: {}'.format(TARGET_TEMP))
+    except ValueError:
+        print('Invalid value received: {}'.format(msg))
+
+MQTT.subscribe(client, feed_target_temp, update_temp)
+
+# ---------- PID ----------
 Kp = 10.0 # Proportional gain
 Ki = 0.1 # Integral gain
 Kd = 1.0 # Derivative gain
@@ -37,13 +49,13 @@ def PID(current_temp):
 
     error = current_temp - TARGET_TEMP
 
-    integral += error * dt
-    integral = max(-100, min(100, integral))  # prevent windup
+    integral += error * dt # how long you've been off
+    integral = max(-100, min(100, integral))  # prevents windup
     derivative = (error - prev_error) / dt
 
-    P = Kp * error
-    I = Ki * integral
-    D = Kd * derivative
+    P = Kp * error # how far off right now
+    I = Ki * integral # how long you've been off
+    D = Kd * derivative # how fast it's changing
     
     prev_error, prev_time = error, time_now
 
@@ -54,6 +66,7 @@ def PID(current_temp):
 # ----- Temperature Regulation -----
 while True:
     try:
+        MQTT.check_messages(client)  # checks for any received updates
         temp = read_temp(temp_sens) # reading temperature
 
         pump_speed = PID(temp) # control speed of cooler

@@ -57,3 +57,10 @@ def publish(client, feed, value):
         client.publish(feed, bytes(str(round(value, 2)), 'utf-8'), qos=0)
     except Exception as e:
         print('Publish failed: {}{}'.format(type(e).__name__, e))
+
+def subscribe(client, feed, callback):
+    client.set_callback(callback)
+    client.subscribe(feed)
+
+def check_messages(client):
+    client.check_msg()  # checks if any new message has arrived
