@@ -15,17 +15,18 @@ OD_sensor = TCS34725(i2c)
 led = Pin(14, Pin.OUT)
 
 # ----- Measure OD Value -----
+PUMP_PRIME_TIME = 0.3   # tune this to your tube length
+PUMP_DUTY      = 100    # tune this to your setup
+
 def measure_OD(reference):
+    pump.duty(PUMP_DUTY)
+    utime.sleep(PUMP_PRIME_TIME)  # just enough to reach sensor
+    
     led.on()
-    utime.sleep(1)  # lets the LED stabilise
+    utime.sleep(1)
     _, _, _, sample_reading = OD_sensor.read(True) 
-    utime.sleep(1)  # gives time for the readings
+    utime.sleep(1)
     led.off()
-
-    if sample_reading == 0:
-        print('Error: sensor reading is 0')
-        return None
-
-    OD = math.log10(reference / sample_reading)
-    return OD
-
+    
+    pump.duty(0)
+    return math.log10(reference / sample_reading) if sample_reading else None
