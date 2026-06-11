@@ -17,29 +17,49 @@ feed_pid  = MQTT.make_feed(b'PID-output')
 
 # ------ Update Target Temperature -------
 TARGET_TEMP = 17.0  # default until updated from dashboard
-feed_target_temp = MQTT.make_feed(b'target-temp')
+Kp, Ki, Kd = 10.0, 0.1, 1.0
 
-def update_temp(topic, msg):
-    global TARGET_TEMP
+feed_target_temp = MQTT.make_feed(b'target-temp')
+feed_kp          = MQTT.make_feed(b'kp-gain')
+feed_ki          = MQTT.make_feed(b'ki-gain')
+feed_kd          = MQTT.make_feed(b'kd-gain')
+
+def on_message(topic, msg):
+    global TARGET_TEMP, Kp, Ki, Kd
     try:
-        TARGET_TEMP = float(msg.decode('utf-8'))
-        print('Target temp updated to: {}'.format(TARGET_TEMP))
+        value = float(msg.decode('utf-8'))
+
+        if topic == feed_target_temp:
+            TARGET_TEMP = value
+            integral = 0  # reset integral so old accumulation doesn't carry over
+            print('Target temp updated to: {}'.format(value))
+        elif topic == feed_kp:
+            Kp = value
+            print('Kp updated to: {}'.format(value))
+        elif topic == feed_ki:
+            Ki = value
+            print('Ki updated to: {}'.format(value))
+        elif topic == feed_kd:
+            Kd = value
+            print('Kd updated to: {}'.format(value))
+        else:
+            print('Unknown topic: {}'.format(topic))
+
     except ValueError:
         print('Invalid value received: {}'.format(msg))
 
-MQTT.subscribe(client, feed_target_temp, update_temp)
+MQTT.subscribe(client, feed_target_temp, on_message)
+MQTT.subscribe(client, feed_kp, on_message)
+MQTT.subscribe(client, feed_ki, on_message)
+MQTT.subscribe(client, feed_kd, on_message)
 
 # ---------- PID ----------
-Kp = 10.0 # Proportional gain
-Ki = 0.1 # Integral gain
-Kd = 1.0 # Derivative gain
-
 integral = 0
 prev_error = 0
 prev_time = utime.ticks_ms()
 
 def PID(current_temp):
-    global integral, prev_error, prev_time
+    global integral, prev_error, prev_time, Kp, Ki, Kd
 
     time_now = utime.ticks_ms()
     dt = utime.ticks_diff(time_now, prev_time) / 1000.0 # difference between prev PID call and new one (in seconds)
