@@ -1,5 +1,6 @@
 from machine import Pin, ADC
 import math
+import utime
 
 from config import (
     THERMISTOR_PIN,
@@ -18,7 +19,15 @@ adc.width(ADC.WIDTH_12BIT)
 
 
 def read_temperature():
-    raw = adc.read()
+    total = 0
+    for sample in range(25):
+        total += adc.read()
+        utime.sleep_ms(10)
+
+    raw = total // 25
+
+    if raw < 100 or raw > 4000:
+        print("Warning: thermistor circuit may be disconnected or shorted")
 
     # Keep the math safe if the ADC reads exactly 0 or 4095.
     if raw <= 0:
