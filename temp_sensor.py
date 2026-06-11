@@ -1,6 +1,6 @@
 from machine import Pin, ADC, PWM
 import utime
-from read_temp import init_temp_sensor, read_temp
+from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
 
 # ---------- Pins ----------
