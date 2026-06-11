@@ -1,0 +1,6 @@
+{
+    "pymakr.projects.runScriptPrompt": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    }
+}
