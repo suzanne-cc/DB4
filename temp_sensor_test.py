@@ -1,11 +1,13 @@
 from machine import Pin, ADC, PWM
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+import display
 
 # ---------- Pins ----------
-pump_pin = Pin(12, Pin.OUT)
+pump_pin = Pin(TEMP_PUMP, Pin.OUT)
 pump = PWM(pump_pin, freq=1000)
-temp_sens = init_temp_sensor(32)
+temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
 # ------ Update Target Temperature -------
 TARGET_TEMP = 17.0  # default until updated from dashboard
@@ -44,8 +46,8 @@ def PID(current_temp):
 # ----- Temperature Regulation -----
 while True:
     temp = read_temp(temp_sens) # reading temperature
+    adc = init_temp_sensor(temp_sens)
 
-    pump_speed = PID(temp) # control speed of cooler
-    pump.duty(int(max(0, min(1023, pump_speed))))
+    display.show_thermistor_status(adc, temp)
 
     utime.sleep(10) # 10sec delay

@@ -2,11 +2,12 @@ from machine import Pin, ADC, PWM
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
 
 # ---------- Pins ----------
-pump_pin = Pin(12, Pin.OUT)
+pump_pin = Pin(TEMP_PUMP, Pin.OUT)
 pump = PWM(pump_pin, freq=1000)
-temp_sens = init_temp_sensor(32)
+temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
 # ------- MQTT Setup -------
 MQTT.connect_wifi()

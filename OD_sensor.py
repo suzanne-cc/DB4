@@ -3,16 +3,17 @@ from provided_code.tcs34725 import TCS34725
 import utime
 import MQTT
 import math
+from pin_configuration import OD_PUMP, in1_PIN, in2_PIN, OD_SENSOR_SCL, OD_SENSOR_SDA, LED_PIN
 
 # ---------- Pins ----------
-pump_speed = PWM(Pin(13), freq=1000)  # speed control
-in1 = Pin(14, Pin.OUT)          # direction
-in2 = Pin(15, Pin.OUT)          # direction
+pump_speed = PWM(OD_PUMP, freq=1000)  # speed control
+in1 = Pin(in1_PIN, Pin.OUT)          # direction
+in2 = Pin(in2_PIN, Pin.OUT)          # direction
 
-i2c = I2C(scl=Pin(22), sda=Pin(23), freq=100000)
+i2c = I2C(scl=OD_SENSOR_SCL, sda=OD_SENSOR_SDA, freq=100000)
 OD_sensor = TCS34725(i2c)
 
-led = Pin(26, Pin.OUT)
+led = Pin(LED_PIN, Pin.OUT)
 
 # ------- MQTT Setup -------
 MQTT.connect_wifi()
@@ -77,7 +78,7 @@ def measure_OD():
     
     led.on()
     utime.sleep(1)
-    _, _, _, sample_reading = OD_sensor.read(True) 
+    _, _, sample_reading, _ = OD_sensor.read(True) 
     utime.sleep(1)
     led.off()
     
