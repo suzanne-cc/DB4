@@ -42,7 +42,6 @@ def PID(current_temp):
     output = P + I + D
     return output
 
-
 # ----- Temperature Regulation -----
 display.init_display()
 

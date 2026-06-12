@@ -3,6 +3,7 @@ import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
 from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+import display
 
 # ---------- Pins ----------
 pump_pin = Pin(TEMP_PUMP, Pin.OUT)
@@ -85,6 +86,8 @@ def PID(current_temp):
 
 
 # ----- Temperature Regulation -----
+display.init_display()
+
 while True:
     try:
         MQTT.check_messages(client)  # checks for any received updates
@@ -92,6 +95,7 @@ while True:
 
         pump_speed = PID(temp) # control speed of cooler
         pump.duty(int(max(0, min(1023, pump_speed))))
+        display.show_thermistor_status(temp)
 
         MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
         MQTT.publish(client, feed_pid, pump_speed) # publish PID data to adaFruit
