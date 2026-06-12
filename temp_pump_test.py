@@ -2,12 +2,14 @@ from machine import Pin, ADC, PWM
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
-from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+from pin_configuration import TEMP_PUMP, TEMP_PUMP_2, THERMISTOR_PIN
 import display
 
 # ---------- Pins ----------
-pump_pin = Pin(TEMP_PUMP, Pin.OUT)
-pump = PWM(pump_pin, freq=1000)
+pump = PWM(Pin(TEMP_PUMP), freq=1000)  # forward — connected to IA
+pump_pin2 = Pin(TEMP_PUMP_2, Pin.OUT)        # tied low — connected to IB
+pump_pin2.off()                              # always off for one way
+
 temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
 # ------ Update Target Temperature -------
