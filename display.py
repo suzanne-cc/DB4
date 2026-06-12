@@ -21,7 +21,7 @@ def init_display():
     return oled
 
 
-def show_thermistor_status(raw_adc, temp_c, message="Touch sensor 🙂"):
+def show_thermistor_status(raw_adc, temp_c, message="Touch sensor :)"):
     oled.fill(0)
     oled.text("DB4 BIOREACTOR", 0, 0)
     oled.text("Thermistor test", 0, 12)

@@ -44,10 +44,12 @@ def PID(current_temp):
 
 
 # ----- Temperature Regulation -----
+display.init_display()
+
 while True:
-    temp = read_temp(temp_sens) # reading temperature
-    adc = init_temp_sensor(temp_sens)
+    raw_adc = temp_sens.read()
+    temp = read_temp(temp_sens)
 
-    display.show_thermistor_status(adc, temp)
+    display.show_thermistor_status(raw_adc, temp)
 
-    utime.sleep(10) # 10sec delay
+    utime.sleep(10)
