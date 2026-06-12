@@ -10,7 +10,7 @@ pump_speed = PWM(OD_PUMP, freq=1000)  # speed control
 in1 = Pin(in1_PIN, Pin.OUT)          # direction
 in2 = Pin(in2_PIN, Pin.OUT)          # direction
 
-i2c = I2C(scl=OD_SENSOR_SCL, sda=OD_SENSOR_SDA, freq=100000)
+i2c = I2C(1, scl=OD_SENSOR_SCL, sda=OD_SENSOR_SDA, freq=100000)
 OD_sensor = TCS34725(i2c)
 
 led = Pin(LED_PIN, Pin.OUT)
