@@ -47,6 +47,7 @@ def PID(current_temp):
 display.init_display()
 
 while True:
+
     raw_adc = temp_sens.read()
     temp = read_temp(temp_sens)
 
