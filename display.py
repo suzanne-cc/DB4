@@ -15,17 +15,12 @@ def init_display():
     oled.show()
     return oled
 
-def show_thermistor_status(temp_c):
+def show_thermistor_status(temp_c, speed, pump_duty):
     oled.fill(0)
     #oled.text("DB4 PROJECT", 0, 0)
     #oled.text("Thermistor test", 0, 12)
     #oled.text("Raw: {}".format(raw_adc), 0, 28)
     oled.text("Temp: {:.1f} C".format(temp_c), 0, 42)
-    oled.show()
-
-def show_error(message):
-    oled.fill(0)
-    oled.text("DB4 BIOREACTOR", 0, 0)
-    oled.text("ERROR", 0, 18)
-    oled.text(message, 0, 34)
+    oled.text("Pump PID: {:.1f}".format(speed), 0, 42)
+    oled.text("Pump Duty: {:.1f}".format(pump_duty), 0, 42)
     oled.show()
