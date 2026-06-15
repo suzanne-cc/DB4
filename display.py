@@ -15,10 +15,17 @@ def init_display():
     oled.show()
     return oled
 
-def show_thermistor_status(temp_c, speed, pump_duty):
+def show_thermistor_status(temp_c, speed, pump_duty, flow):
     oled.fill(0)
     oled.text("DB4 PROJECT", 0, 0)
     oled.text("Temp: {:.1f} C".format(temp_c), 0, 16)
     oled.text("PID: {:.1f}".format(speed), 0, 32)
-    oled.text("Duty: {:.1f}".format(pump_duty), 0, 48)
+    oled.text("Duty: {:.1f}".format(pump_duty), 0, 40)
+    oled.test("Flow rate: {:.1f}".format(flow), 0, 52)
+    oled.show()
+
+def show_OD_reading(OD_measurment):
+    oled.fill(0)
+    oled.text("DB4 PROJECT", 0, 0)
+    oled.text("OD: {:.1f} C".format(OD_measurment), 0, 16)
     oled.show()

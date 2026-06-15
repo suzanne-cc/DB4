@@ -3,14 +3,15 @@ from provided_code.tcs34725 import TCS34725
 import utime
 import MQTT
 import math
-from pin_configuration import OD_PUMP, in1_PIN, in2_PIN, OD_SENSOR_SCL, OD_SENSOR_SDA, LED_PIN
+import storage
+from pin_configuration import OD_PUMP, in1_PIN, in2_PIN, SCL_PIN, SDA_PIN, LED_PIN
 
 # ---------- Pins ----------
 pump_speed = PWM(OD_PUMP, freq=1000)  # speed control
 in1 = Pin(in1_PIN, Pin.OUT)          # direction
 in2 = Pin(in2_PIN, Pin.OUT)          # direction
 
-i2c = I2C(1, scl=OD_SENSOR_SCL, sda=OD_SENSOR_SDA, freq=100000)
+i2c = I2C(1, scl=SCL_PIN, sda=SDA_PIN, freq=100000)
 OD_sensor = TCS34725(i2c)
 
 led = Pin(LED_PIN, Pin.OUT)
@@ -137,6 +138,10 @@ def equalize():
     accumulated_flow_ml = 0.0  # reset after equalization
 
 # -------- Main Loop --------
+
+storage.init_csv("OD_measurments", ["Time [s]", "OD", "Pump Speed [duty]", "low Rate [ml/s]"])
+start = utime.time()
+
 while True:
     MQTT.check_messages(client)
 
@@ -145,8 +150,10 @@ while True:
     if od_measured is not None:
         speed = pump_speed_from_od(od_measured)
         pump_to_mussel(speed)
-        MQTT.publish(client, flow_rate, speed) # publish data to adaFruit
         MQTT.publish(client, od_feed, od_measured) # publish data to adaFruit
+        MQTT.publish(client, flow_rate, speed) # publish data to adaFruit
+
+        storage.store_data(utime.time() - start, od_measured, speed, flow_rate)
     else:
         pump_stop()
 

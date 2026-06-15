@@ -41,19 +41,24 @@ def PID(current_temp):
     output = P + I + D
     return output
 
+# ----- Pump Flow Rate ----
+def flow_rate(duty):
+    duty = (duty/1023) * 100
+    ml_per_sec = 0.161 * duty - 3.553
+    return ml_per_sec
+
 
 # ----- Temperature Regulation -----
 display.init_display()
 
 while True:
-    try:
-        temp = read_temp(temp_sens)
-        pump_speed = PID(temp)
-        pump_duty = int(max(0, min(1023, pump_speed)))
-        pump.duty(pump_duty)
-        display.show_thermistor_status(temp, pump_speed, pump_duty)
+    temp = read_temp(temp_sens)
+    pump_speed = PID(temp)
+    pump_duty = int(max(0, min(1023, pump_speed)))
+    pump.duty(pump_duty)
+    
+    rate = flow_rate(pump_duty)
 
-    except ValueError:
-        print('Invalid reading, skipping...')
+    display.show_thermistor_status(temp, pump_speed, pump_duty, rate)
 
-    utime.sleep(2)
+    utime.sleep(10)

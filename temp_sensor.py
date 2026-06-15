@@ -4,6 +4,7 @@ from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
 from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
 import display
+import storage
 
 # ---------- Pins ----------
 pump_pin = Pin(TEMP_PUMP, Pin.OUT)
@@ -85,8 +86,16 @@ def PID(current_temp):
     return output
 
 
+# ----- Pump Flow Rate ----
+def flow_rate(duty, time):
+    duty = (duty/1023) * 100
+    ml_per_sec = 0.161 * duty - 3.553
+    return ml_per_sec * time
+
 # ----- Temperature Regulation -----
 display.init_display()
+storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]", "PID"])
+start = utime.time()
 
 while True:
     try:
@@ -99,6 +108,7 @@ while True:
 
         MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
         MQTT.publish(client, feed_pid, pump_speed) # publish PID data to adaFruit
+        storage.store_data(utime.time() - start, temp, pump_speed)
 
         utime.sleep(10) # 10sec delay
 
