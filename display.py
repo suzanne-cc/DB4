@@ -17,10 +17,8 @@ def init_display():
 
 def show_thermistor_status(temp_c, speed, pump_duty):
     oled.fill(0)
-    #oled.text("DB4 PROJECT", 0, 0)
-    #oled.text("Thermistor test", 0, 12)
-    #oled.text("Raw: {}".format(raw_adc), 0, 28)
-    oled.text("Temp: {:.1f} C".format(temp_c), 0, 42)
-    oled.text("Pump PID: {:.1f}".format(speed), 0, 42)
-    oled.text("Pump Duty: {:.1f}".format(pump_duty), 0, 42)
+    oled.text("DB4 PROJECT", 0, 0)
+    oled.text("Temp: {:.1f} C".format(temp_c), 0, 16)
+    oled.text("PID: {:.1f}".format(speed), 0, 32)
+    oled.text("Duty: {:.1f}".format(pump_duty), 0, 48)
     oled.show()

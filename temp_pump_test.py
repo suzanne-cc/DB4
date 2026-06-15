@@ -1,15 +1,11 @@
 from machine import Pin, ADC, PWM
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
-import MQTT
-from pin_configuration import TEMP_PUMP, TEMP_PUMP_2, THERMISTOR_PIN
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
 import display
 
 # ---------- Pins ----------
-pump = PWM(Pin(TEMP_PUMP), freq=1000)  # forward — connected to IA
-pump_pin2 = Pin(TEMP_PUMP_2, Pin.OUT)        # tied low — connected to IB
-pump_pin2.off()                              # always off for one way
-
+pump = PWM(Pin(TEMP_PUMP), freq=1000)
 temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
 # ------ Update Target Temperature -------
@@ -50,12 +46,14 @@ def PID(current_temp):
 display.init_display()
 
 while True:
-    temp = read_temp(temp_sens) # reading temperature
+    try:
+        temp = read_temp(temp_sens)
+        pump_speed = PID(temp)
+        pump_duty = int(max(0, min(1023, pump_speed)))
+        pump.duty(pump_duty)
+        display.show_thermistor_status(temp, pump_speed, pump_duty)
 
-    pump_speed = PID(temp) # raw PID output
-    pump_duty = int(max(0, min(1023, pump_speed))) # actual pump command
+    except ValueError:
+        print('Invalid reading, skipping...')
 
-    pump.duty(pump_duty)
-    display.show_thermistor_status(temp, pump_speed, pump_duty)
-
-    utime.sleep(10) # 10sec delay
+    utime.sleep(2)
