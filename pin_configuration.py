@@ -16,7 +16,4 @@ TEMP_PUMP = 5
 
 # OD sensor
 OD_PUMP = 13
-in1_PIN = 14
-in2_PIN = 15
-
 LED_PIN = 2

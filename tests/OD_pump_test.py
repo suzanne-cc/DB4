@@ -1,10 +1,9 @@
 from machine import Pin, ADC, PWM, I2C
 from provided_code.tcs34725 import TCS34725
 import utime
-import MQTT
 import math
-import storage
 from pin_configuration import OD_PUMP, SCL_PIN, SDA_PIN, LED_PIN
+import display
 
 # ---------- Pins ----------
 pump = PWM(Pin(OD_PUMP), freq=1000)
@@ -12,13 +11,6 @@ pump = PWM(Pin(OD_PUMP), freq=1000)
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
 led = Pin(LED_PIN, Pin.OUT)
-
-# ------- MQTT Setup -------
-MQTT.connect_wifi()
-client = MQTT.connect_mqtt()
-
-flow_rate_feed = MQTT.make_feed(b'flow-rate')
-od_feed = MQTT.make_feed(b'od-feed')
 
 # ------ Variables ------
 OD_TO_CELLS_SLOPE = 1.0e7
@@ -28,20 +20,6 @@ CLEAR_OD_READING = 1000
 PUMP_ML_MIN_PER_DUTY = 0.05
 INITIAL_CONCENTRATION = 10000
 TARGET_ALGAE = 1.0e6
-
-feed_target_algae = MQTT.make_feed(b'target-algae')
-
-def on_message(topic, msg):
-    global TARGET_ALGAE
-    try:
-        value = float(msg.decode('utf-8'))
-        if topic == feed_target_algae:
-            TARGET_ALGAE = value
-            print('Target algae cell number: {}'.format(value))
-    except ValueError:
-        print('Invalid value received: {}'.format(msg))
-
-MQTT.subscribe(client, feed_target_algae, on_message)
 
 # ----- Measure OD Value -----
 PUMP_PRIME_TIME = 1
@@ -81,21 +59,17 @@ def pump_speed_from_od(feed_od):
     return int(max(0, min(1023, speed)))
 
 # -------- Main Loop --------
-storage.init_csv("OD_measurements", ["Time [s]", "OD", "Pump Speed [duty]", "Flow Rate [ml/s]"])
 start = utime.time()
+display.init_display(i2c)
 
 while True:
-    MQTT.check_messages(client)
     od_measured = measure_OD()
 
     if od_measured is not None:
         speed = pump_speed_from_od(od_measured)
         pump.duty(speed)
         flow_ml_s = speed * PUMP_ML_MIN_PER_DUTY  # actual flow value
-
-        MQTT.publish(client, od_feed, od_measured)
-        MQTT.publish(client, flow_rate_feed, flow_ml_s)
-        storage.store_data(utime.time() - start, od_measured, speed, flow_ml_s)
+        display.show_OD_reading(od_measured, speed, flow_ml_s)
     else:
         pump.duty(0)
 

@@ -1,12 +1,13 @@
-from machine import Pin, ADC, PWM
+from machine import Pin, ADC, PWM, I2C
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
-from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN
 import display
 import storage
 
 # ---------- Pins ----------
+i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=100000)
 pump_pin = Pin(TEMP_PUMP, Pin.OUT)
 pump = PWM(pump_pin, freq=1000)
 temp_sens = init_temp_sensor(THERMISTOR_PIN)
@@ -93,7 +94,7 @@ def flow_rate(duty, time):
     return ml_per_sec * time
 
 # ----- Temperature Regulation -----
-display.init_display()
+display.init_display(i2c)
 storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]", "PID"])
 start = utime.time()
 

@@ -1,10 +1,11 @@
-from machine import Pin, ADC, PWM
+from machine import Pin, ADC, PWM, I2C
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
-from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN
 import display
 
 # ---------- Pins ----------
+i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=100000)
 pump = PWM(Pin(TEMP_PUMP), freq=1000)
 temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
@@ -49,7 +50,7 @@ def flow_rate(duty):
 
 
 # ----- Temperature Regulation -----
-display.init_display()
+display.init_display(i2c)
 
 while True:
     temp = read_temp(temp_sens)
