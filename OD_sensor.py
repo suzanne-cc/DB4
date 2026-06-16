@@ -7,7 +7,8 @@ import storage
 from pin_configuration import OD_PUMP, SCL_PIN, SDA_PIN, LED_PIN
 
 # ---------- Pins ----------
-pump = PWM(Pin(OD_PUMP), freq=1000)
+pump = Pin(OD_PUMP, Pin.OUT)
+pump.value(1)
 
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
@@ -23,11 +24,15 @@ od_feed = MQTT.make_feed(b'od-feed')
 # ------ Variables ------
 OD_TO_CELLS_SLOPE = 1.0e7
 OD_TO_CELLS_INTERCEPT = 0.0
+
 CLEARING_RATE_ML_SEC = 120.0
 CLEAR_OD_READING = 1000
-PUMP_ML_MIN_PER_DUTY = 0.05
+
 INITIAL_CONCENTRATION = 10000
-TARGET_ALGAE = 1.0e6
+TARGET_ALGAE = 1.0e9
+
+TIME_TO_OD = 1
+PUMP_ML_PER_SEC = 10
 
 feed_target_algae = MQTT.make_feed(b'target-algae')
 
@@ -44,20 +49,18 @@ def on_message(topic, msg):
 MQTT.subscribe(client, feed_target_algae, on_message)
 
 # ----- Measure OD Value -----
-PUMP_PRIME_TIME = 1
-PUMP_DUTY = 100
-
 def measure_OD():
-    pump.duty(PUMP_DUTY)
-    utime.sleep(PUMP_PRIME_TIME)
+    print("measure start")
+    pump.on()
+    utime.sleep(TIME_TO_OD)
 
     led.on()
     utime.sleep(1)
     _, _, sample_reading, _ = OD_sensor.read(True)
     utime.sleep(1)
     led.off()
-
-    pump.duty(0)
+    
+    print("measure end")
     return math.log10(CLEAR_OD_READING / sample_reading) if sample_reading else None
 
 # ------ Mussel Feeding ------
@@ -66,22 +69,22 @@ def od_to_algae_concentration(od):
 
 last_feed = utime.time()
 
-def pump_speed_from_od(feed_od):
+def pump_duration_from_od(feed_od):
     global last_feed
     feed_conc = od_to_algae_concentration(feed_od)
     if feed_conc <= 0:
         return 0
 
     total_algae = INITIAL_CONCENTRATION - (CLEARING_RATE_ML_SEC * (utime.time() - last_feed))
-    algae_needed_per_sec = TARGET_ALGAE - total_algae
-    flow_ml_sec = algae_needed_per_sec / feed_conc
-    speed = flow_ml_sec / PUMP_ML_MIN_PER_DUTY
+    algae_needed = TARGET_ALGAE - total_algae
+    flow_ml = algae_needed / feed_conc        # ml needed
+    duration_s = flow_ml / (PUMP_ML_PER_SEC)  # seconds to run
 
     last_feed = utime.time()
-    return int(max(0, min(1023, speed)))
+    return max(0, duration_s)
 
 # -------- Main Loop --------
-storage.init_csv("OD_measurements", ["Time [s]", "OD", "Pump Speed [duty]", "Flow Rate [ml/s]"])
+storage.init_csv("OD_measurements", ["Time [s]", "OD", "Pump Duration [s]", "Volume Transfered [ml]"])
 start = utime.time()
 
 while True:
@@ -89,14 +92,18 @@ while True:
     od_measured = measure_OD()
 
     if od_measured is not None:
-        speed = pump_speed_from_od(od_measured)
-        pump.duty(speed)
-        flow_ml_s = speed * PUMP_ML_MIN_PER_DUTY  # actual flow value
+        duration_s = pump_duration_from_od(od_measured)
+
+        pump.on()
+        utime.sleep(duration_s)   # run for calculated duration
+        pump.off()             # then stop
+
+        ml_transfered = duration_s * PUMP_ML_PER_SEC
 
         MQTT.publish(client, od_feed, od_measured)
-        MQTT.publish(client, flow_rate_feed, flow_ml_s)
-        storage.store_data(utime.time() - start, od_measured, speed, flow_ml_s)
+        MQTT.publish(client, flow_rate_feed, ml_transfered)
+        storage.store_data(utime.time() - start, od_measured, duration_s, ml_transfered)
     else:
-        pump.duty(0)
+        pump.off()
 
     utime.sleep(60)

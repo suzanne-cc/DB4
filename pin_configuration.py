@@ -15,5 +15,5 @@ ADC_MAX = 4095
 TEMP_PUMP = 5
 
 # OD sensor
-OD_PUMP = 13
-LED_PIN = 2
+OD_PUMP = 18
+LED_PIN = 26
