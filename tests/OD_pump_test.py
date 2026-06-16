@@ -28,10 +28,10 @@ PUMP_ML_PER_SEC = 10
 
 # ----- Measure OD Value -----
 def measure_OD():
-    print("measure start")
+
     pump.on()
     utime.sleep(TIME_TO_OD)
-
+    print("measure start")
     led.on()
     utime.sleep(1)
     _, _, sample_reading, _ = OD_sensor.read(True)
