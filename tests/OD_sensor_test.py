@@ -22,7 +22,7 @@ def measure_OD():
     led.on()
     utime.sleep(1)
     
-    _, _, _, sample_reading = OD_sensor.read(True)
+    _, _, sample_reading, _ = OD_sensor.read(True)
     print("OD reading:", sample_reading)
     print("Raw clear:", sample_reading)
     print("Calculated OD:", od_measured)

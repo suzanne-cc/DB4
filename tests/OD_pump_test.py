@@ -34,7 +34,7 @@ def measure_OD():
     print("measure start")
     led.on()
     utime.sleep(1)
-    _, _, _, sample_reading = OD_sensor.read(True)
+    _, _, sample_reading, _ = OD_sensor.read(True)
     utime.sleep(1)
     led.off()
     
