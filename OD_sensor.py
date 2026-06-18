@@ -5,6 +5,7 @@ import MQTT
 import math
 import storage
 from pin_configuration import OD_PUMP, SCL_PIN, SDA_PIN, LED_PIN
+from variables import *
 
 # ---------- Pins ----------
 pump = Pin(OD_PUMP, Pin.OUT)
@@ -21,19 +22,7 @@ client = MQTT.connect_mqtt()
 flow_rate_feed = MQTT.make_feed(b'flow-rate')
 od_feed = MQTT.make_feed(b'od-feed')
 
-# ------ Variables ------
-OD_TO_CELLS_SLOPE = 1.0e7
-OD_TO_CELLS_INTERCEPT = 0.0
-
-CLEARING_RATE_ML_SEC = 120.0
-CLEAR_OD_READING = 1000
-
-INITIAL_CONCENTRATION = 10000
-TARGET_ALGAE = 1.0e9
-
-TIME_TO_OD = 1
-PUMP_ML_PER_SEC = 10
-
+# ------ Update Target Algae ------
 feed_target_algae = MQTT.make_feed(b'target-algae')
 
 def on_message(topic, msg):

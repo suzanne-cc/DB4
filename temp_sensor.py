@@ -5,6 +5,7 @@ import MQTT
 from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN
 import display
 import storage
+from variables import *
 
 # ---------- Pins ----------
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=100000)
@@ -20,9 +21,6 @@ feed_temp = MQTT.make_feed(b'temperature')
 feed_pid  = MQTT.make_feed(b'PID-output')
 
 # ------ Update Target Temperature -------
-TARGET_TEMP = 17.0  # default until updated from dashboard
-Kp, Ki, Kd = 10.0, 0.1, 1.0
-
 feed_target_temp = MQTT.make_feed(b'target-temp')
 feed_kp          = MQTT.make_feed(b'kp-gain')
 feed_ki          = MQTT.make_feed(b'ki-gain')
