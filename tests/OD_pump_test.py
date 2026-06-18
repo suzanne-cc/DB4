@@ -34,7 +34,7 @@ def measure_OD():
     print("measure start")
     led.on()
     utime.sleep(1)
-    _, _, sample_reading, _ = OD_sensor.read(True)
+    _, _, _, sample_reading = OD_sensor.read(True)
     utime.sleep(1)
     led.off()
     
@@ -77,7 +77,7 @@ while True:
         print("feeding end")
         
         ml_transfered = duration_s * PUMP_ML_PER_SEC
-        display.show_OD_reading(od_measured, duration_s, ml_transfered)
+        display.show_OD_reading(od_measured)
     else:
         pump.off()
 

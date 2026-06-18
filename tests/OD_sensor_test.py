@@ -2,7 +2,7 @@ from machine import Pin, ADC, PWM, I2C
 from provided_code.tcs34725 import TCS34725
 import utime
 import math
-from pin_configuration import OD_PUMP, in1_PIN, in2_PIN, SCL_PIN, SDA_PIN, LED_PIN
+from pin_configuration import OD_PUMP,SCL_PIN, SDA_PIN, LED_PIN
 import display
 
 # ---------- Pins ----------
@@ -22,8 +22,10 @@ def measure_OD():
     led.on()
     utime.sleep(1)
     
-    _, _, sample_reading, _ = OD_sensor.read(True)
+    _, _, _, sample_reading = OD_sensor.read(True)
     print("OD reading:", sample_reading)
+    print("Raw clear:", sample_reading)
+    print("Calculated OD:", od_measured)
     
     utime.sleep(1)
     led.off()
@@ -37,4 +39,4 @@ while True:
     od_measured = measure_OD()
     display.show_OD_reading(od_measured)
 
-    utime.sleep(10)  # measure every 10 sec
+    utime.sleep(1)  # measure every 10 sec

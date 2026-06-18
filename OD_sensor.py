@@ -12,6 +12,8 @@ pump.value(1)
 
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
+OD_sensor.integration_time(500.4)
+OD_sensor.gain(60)
 led = Pin(LED_PIN, Pin.OUT)
 
 # ------- MQTT Setup -------
