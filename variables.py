@@ -12,5 +12,5 @@ PUMP_ML_PER_SEC = 10
 
 # ------ Default Values ------
 TARGET_ALGAE = 1.0e9
-TARGET_TEMP = 17.0
+TARGET_TEMP = 18.0
 Kp, Ki, Kd = 10.0, 0.1, 1.0

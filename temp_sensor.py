@@ -18,7 +18,7 @@ MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
 feed_temp = MQTT.make_feed(b'temperature-sensor.temperature')
-feed_pid  = MQTT.make_feed(b'temperature-sensor.PID-output')
+feed_pid  = MQTT.make_feed(b'temperature-sensor.pid-output')
 
 # ------ Update Target Temperature -------
 feed_target_temp = MQTT.make_feed(b'subscribed-data.target-temp')
@@ -96,22 +96,16 @@ storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]
 start = utime.time()
 
 while True:
-    try:
-        MQTT.check_messages(client)  # checks for any received updates
-        temp = read_temp(temp_sens) # reading temperature
-        display.update_temp(temp)
+    MQTT.check_messages(client)  # checks for any received updates
+    temp = read_temp(temp_sens) # reading temperature
+    display.update_temp(temp)
 
-        pid = PID(temp) # control speed of cooler
-        pump.duty(int(max(0, min(1023, pid))))
-        display.update_PID(pid)
+    pid = PID(temp) # control speed of cooler
+    pump.duty(int(max(0, min(1023, pid))))
+    display.update_PID(pid)
 
-        MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
-        MQTT.publish(client, feed_pid, pid) # publish PID data to adaFruit
-        storage.store_data(utime.time() - start, temp, pid)
+    MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
+    MQTT.publish(client, feed_pid, pid) # publish PID data to adaFruit
+    storage.store_data(utime.time() - start, temp, pid)
 
-        utime.sleep(10) # 10sec delay
-
-    except KeyboardInterrupt:
-        print('Ctrl-C pressed...exiting')
-        client.disconnect()
-        break
+    utime.sleep(10) # 10sec delay

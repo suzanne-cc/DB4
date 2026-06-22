@@ -1,6 +1,5 @@
 from machine import Pin, I2C
 import provided_code.ssd1306
-
 from pin_configuration import OLED_WIDTH, OLED_HEIGHT, OLED_ADDR, SDA_PIN, SCL_PIN
 
 oled = None
