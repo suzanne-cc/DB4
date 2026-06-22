@@ -21,10 +21,9 @@ def show_thermistor_status(temp_c, speed, pump_duty, flow):
     oled.test("Flow rate: {:.1f}".format(flow), 0, 52)
     oled.show()
 
-def show_OD_reading(OD_measurment, pump_duty, flow):
+def show_OD_reading(OD_measurment):
     oled.fill(0)
     oled.text("DB4 PROJECT", 0, 0)
-    oled.text("OD: {:.1f}".format(OD_measurment), 0, 16)
-    oled.text("Duty: {:.1f}".format(pump_duty), 0, 32)
-    oled.test("Flow rate: {:.1f} ml/s".format(flow), 0, 40)
+    if(OD_measurment and OD_measurment > 0):
+        oled.text("OD: {:.3f}".format(OD_measurment), 0, 16)
     oled.show()

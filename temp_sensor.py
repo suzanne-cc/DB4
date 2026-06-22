@@ -17,14 +17,14 @@ temp_sens = init_temp_sensor(THERMISTOR_PIN)
 MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
-feed_temp = MQTT.make_feed(b'temperature')
-feed_pid  = MQTT.make_feed(b'PID-output')
+feed_temp = MQTT.make_feed(b'temperature-sensor.temperature')
+feed_pid  = MQTT.make_feed(b'temperature-sensor.PID-output')
 
 # ------ Update Target Temperature -------
-feed_target_temp = MQTT.make_feed(b'target-temp')
-feed_kp          = MQTT.make_feed(b'kp-gain')
-feed_ki          = MQTT.make_feed(b'ki-gain')
-feed_kd          = MQTT.make_feed(b'kd-gain')
+feed_target_temp = MQTT.make_feed(b'subscribed-data.target-temp')
+feed_kp          = MQTT.make_feed(b'subscribed-data.kp-gain')
+feed_ki          = MQTT.make_feed(b'subscribed-data.ki-gain')
+feed_kd          = MQTT.make_feed(b'subscribed-data.kd-gain')
 
 def on_message(topic, msg):
     global TARGET_TEMP, Kp, Ki, Kd

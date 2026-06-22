@@ -77,7 +77,7 @@ while True:
         print("feeding end")
         
         ml_transfered = duration_s * PUMP_ML_PER_SEC
-        display.show_OD_reading(od_measured, duration_s, ml_transfered)
+        display.show_OD_reading(od_measured)
     else:
         pump.off()
 

@@ -13,17 +13,19 @@ pump.value(1)
 
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
+OD_sensor.integration_time(500.4)
+OD_sensor.gain(60)
 led = Pin(LED_PIN, Pin.OUT)
 
 # ------- MQTT Setup -------
 MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
-flow_rate_feed = MQTT.make_feed(b'flow-rate')
-od_feed = MQTT.make_feed(b'od-feed')
+flow_ml_transfered = MQTT.make_feed(b'od-sensor.ml-transfered')
+od_feed = MQTT.make_feed(b'od-sensor.od-feed')
 
 # ------ Update Target Algae ------
-feed_target_algae = MQTT.make_feed(b'target-algae')
+feed_target_algae = MQTT.make_feed(b'subscribed-data.target-algae')
 
 def on_message(topic, msg):
     global TARGET_ALGAE
@@ -90,7 +92,7 @@ while True:
         ml_transfered = duration_s * PUMP_ML_PER_SEC
 
         MQTT.publish(client, od_feed, od_measured)
-        MQTT.publish(client, flow_rate_feed, ml_transfered)
+        MQTT.publish(client, flow_ml_transfered, ml_transfered)
         storage.store_data(utime.time() - start, od_measured, duration_s, ml_transfered)
     else:
         pump.off()

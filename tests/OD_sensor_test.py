@@ -2,7 +2,7 @@ from machine import Pin, ADC, PWM, I2C
 from provided_code.tcs34725 import TCS34725
 import utime
 import math
-from pin_configuration import OD_PUMP, in1_PIN, in2_PIN, SCL_PIN, SDA_PIN, LED_PIN
+from pin_configuration import OD_PUMP,SCL_PIN, SDA_PIN, LED_PIN
 import display
 
 # ---------- Pins ----------
