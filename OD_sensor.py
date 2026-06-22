@@ -6,6 +6,7 @@ import math
 import storage
 from pin_configuration import OD_PUMP, SCL_PIN, SDA_PIN, LED_PIN
 from variables import *
+import display
 
 # ---------- Pins ----------
 pump = Pin(OD_PUMP, Pin.OUT)
@@ -76,6 +77,7 @@ def pump_duration_from_od(feed_od):
 
 # -------- Main Loop --------
 storage.init_csv("OD_measurements", ["Time [s]", "OD", "Pump Duration [s]", "Volume Transfered [ml]"])
+display.init_display(i2c)
 start = utime.time()
 
 while True:
@@ -90,6 +92,8 @@ while True:
         pump.off()             # then stop
 
         ml_transfered = duration_s * PUMP_ML_PER_SEC
+
+        display.show_quick_overview(od_measured, ml_transfered, duration_s)
 
         MQTT.publish(client, od_feed, od_measured)
         MQTT.publish(client, flow_ml_transfered, ml_transfered)

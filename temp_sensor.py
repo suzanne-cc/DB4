@@ -92,7 +92,6 @@ def flow_rate(duty, time):
     return ml_per_sec * time
 
 # ----- Temperature Regulation -----
-display.init_display(i2c)
 storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]", "PID"])
 start = utime.time()
 
@@ -100,14 +99,15 @@ while True:
     try:
         MQTT.check_messages(client)  # checks for any received updates
         temp = read_temp(temp_sens) # reading temperature
+        display.update_temp(temp)
 
-        pump_speed = PID(temp) # control speed of cooler
-        pump.duty(int(max(0, min(1023, pump_speed))))
-        display.show_thermistor_status(temp)
+        pid = PID(temp) # control speed of cooler
+        pump.duty(int(max(0, min(1023, pid))))
+        display.update_PID(pid)
 
         MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
-        MQTT.publish(client, feed_pid, pump_speed) # publish PID data to adaFruit
-        storage.store_data(utime.time() - start, temp, pump_speed)
+        MQTT.publish(client, feed_pid, pid) # publish PID data to adaFruit
+        storage.store_data(utime.time() - start, temp, pid)
 
         utime.sleep(10) # 10sec delay
 
