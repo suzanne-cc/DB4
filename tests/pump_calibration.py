@@ -1,19 +1,16 @@
-from machine import Pin, ADC, PWM
+from machine import Pin, PWM
 import utime
-from provided_code.read_temp import init_temp_sensor, read_temp
-from pin_configuration import TEMP_PUMP, THERMISTOR_PIN
+from pin_configuration import OD_PUMP
 
 # ---------- Pins ----------
-pump = PWM(Pin(TEMP_PUMP), freq=1000)
-temp_sens = init_temp_sensor(THERMISTOR_PIN)
+pump = PWM(Pin(OD_PUMP), freq=1000)
 
 # ----- Temperature Regulation -----
 speed = 10
 
 pump_duty = int(1023 * (speed / 100))
-try:
-    pump.duty(pump_duty)
-    print(f"speed: {speed}")
-    utime.sleep(10) # 10 sec
-finally:
-    pump.duty(0)
+
+pump.duty(pump_duty)
+print(f"speed: {speed}")
+utime.sleep(10) # 10 sec
+pump.duty(0)
