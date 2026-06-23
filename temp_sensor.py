@@ -5,6 +5,7 @@ import MQTT
 from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN
 import display
 import storage
+from variables import *
 
 # ---------- Pins ----------
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=100000)
@@ -16,17 +17,14 @@ temp_sens = init_temp_sensor(THERMISTOR_PIN)
 MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
-feed_temp = MQTT.make_feed(b'temperature')
-feed_pid  = MQTT.make_feed(b'PID-output')
+feed_temp = MQTT.make_feed(b'temperature-sensor.temperature')
+feed_pid  = MQTT.make_feed(b'temperature-sensor.pid-output')
 
 # ------ Update Target Temperature -------
-TARGET_TEMP = 17.0  # default until updated from dashboard
-Kp, Ki, Kd = 10.0, 0.1, 1.0
-
-feed_target_temp = MQTT.make_feed(b'target-temp')
-feed_kp          = MQTT.make_feed(b'kp-gain')
-feed_ki          = MQTT.make_feed(b'ki-gain')
-feed_kd          = MQTT.make_feed(b'kd-gain')
+feed_target_temp = MQTT.make_feed(b'subscribed-data.target-temp')
+feed_kp          = MQTT.make_feed(b'subscribed-data.kp-gain')
+feed_ki          = MQTT.make_feed(b'subscribed-data.ki-gain')
+feed_kd          = MQTT.make_feed(b'subscribed-data.kd-gain')
 
 def on_message(topic, msg):
     global TARGET_TEMP, Kp, Ki, Kd
@@ -94,26 +92,20 @@ def flow_rate(duty, time):
     return ml_per_sec * time
 
 # ----- Temperature Regulation -----
-display.init_display(i2c)
 storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]", "PID"])
 start = utime.time()
 
 while True:
-    try:
-        MQTT.check_messages(client)  # checks for any received updates
-        temp = read_temp(temp_sens) # reading temperature
+    MQTT.check_messages(client)  # checks for any received updates
+    temp = read_temp(temp_sens) # reading temperature
+    display.update_temp(temp)
 
-        pump_speed = PID(temp) # control speed of cooler
-        pump.duty(int(max(0, min(1023, pump_speed))))
-        display.show_thermistor_status(temp)
+    pid = PID(temp) # control speed of cooler
+    pump.duty(int(max(0, min(1023, pid))))
+    display.update_PID(pid)
 
-        MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
-        MQTT.publish(client, feed_pid, pump_speed) # publish PID data to adaFruit
-        storage.store_data(utime.time() - start, temp, pump_speed)
+    MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
+    MQTT.publish(client, feed_pid, pid) # publish PID data to adaFruit
+    storage.store_data(utime.time() - start, temp, pid)
 
-        utime.sleep(10) # 10sec delay
-
-    except KeyboardInterrupt:
-        print('Ctrl-C pressed...exiting')
-        client.disconnect()
-        break
+    utime.sleep(10) # 10sec delay

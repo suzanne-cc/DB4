@@ -1,6 +1,5 @@
 from machine import Pin, I2C
 import provided_code.ssd1306
-
 from pin_configuration import OLED_WIDTH, OLED_HEIGHT, OLED_ADDR, SDA_PIN, SCL_PIN
 
 oled = None
@@ -12,18 +11,33 @@ def init_display(i2c):
     oled.show()
     return oled
 
-def show_thermistor_status(temp_c, speed, pump_duty, flow):
-    oled.fill(0)
-    oled.text("DB4 PROJECT", 0, 0)
-    oled.text("Temp: {:.1f} C".format(temp_c), 0, 16)
-    oled.text("PID: {:.1f}".format(speed), 0, 32)
-    oled.text("Duty: {:.1f}".format(pump_duty), 0, 40)
-    oled.text("Flow rate: {:.1f}".format(flow), 0, 52)
-    oled.show()
+last_temp = None
+last_PID = None
 
-def show_OD_reading(OD_measurment):
+def update_temp(temp):
+    global last_temp
+    last_temp = temp
+
+def update_PID(PID):
+    global last_PID
+    last_PID = PID
+
+def show_quick_overview(OD_measurement, Volume_Transfered, pump_duration):
     oled.fill(0)
     oled.text("DB4 PROJECT", 0, 0)
-    if(OD_measurment and OD_measurment > 0):
-        oled.text("OD: {:.3f}".format(OD_measurment), 0, 16)
+    
+    if last_temp is not None:
+        oled.text("Temp: {:.1f} C".format(last_temp), 0, 16)
+    else:
+        oled.text("Temp: --", 0, 16)
+
+    if last_temp is not None:
+        oled.text("PID: {:.1f}".format(last_PID), 0, 24)
+    else:
+        oled.text("PID: --", 0, 24)
+
+    oled.text("OD: {:.1f}".format(OD_measurement), 0, 32)
+    oled.text("Flow: {:.1f} ml".format(Volume_Transfered), 0, 40)
+    oled.text("Pump: {:.1f} s".format(pump_duration), 0, 48)
     oled.show()
+    

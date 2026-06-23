@@ -5,6 +5,8 @@ import MQTT
 import math
 import storage
 from pin_configuration import OD_PUMP, SCL_PIN, SDA_PIN, LED_PIN
+from variables import *
+import display
 
 # ---------- Pins ----------
 pump = Pin(OD_PUMP, Pin.OUT)
@@ -20,23 +22,11 @@ led = Pin(LED_PIN, Pin.OUT)
 MQTT.connect_wifi()
 client = MQTT.connect_mqtt()
 
-flow_rate_feed = MQTT.make_feed(b'flow-rate')
-od_feed = MQTT.make_feed(b'od-feed')
+flow_ml_transfered = MQTT.make_feed(b'od-sensor.ml-transfered')
+od_feed = MQTT.make_feed(b'od-sensor.od-feed')
 
-# ------ Variables ------
-OD_TO_CELLS_SLOPE = 1.0e7
-OD_TO_CELLS_INTERCEPT = 0.0
-
-CLEARING_RATE_ML_SEC = 120.0
-CLEAR_OD_READING = 1000
-
-INITIAL_CONCENTRATION = 10000
-TARGET_ALGAE = 1.0e9
-
-TIME_TO_OD = 1
-PUMP_ML_PER_SEC = 10
-
-feed_target_algae = MQTT.make_feed(b'target-algae')
+# ------ Update Target Algae ------
+feed_target_algae = MQTT.make_feed(b'subscribed-data.target-algae')
 
 def on_message(topic, msg):
     global TARGET_ALGAE
@@ -87,6 +77,7 @@ def pump_duration_from_od(feed_od):
 
 # -------- Main Loop --------
 storage.init_csv("OD_measurements", ["Time [s]", "OD", "Pump Duration [s]", "Volume Transfered [ml]"])
+display.init_display(i2c)
 start = utime.time()
 
 while True:
@@ -102,8 +93,10 @@ while True:
 
         ml_transfered = duration_s * PUMP_ML_PER_SEC
 
+        display.show_quick_overview(od_measured, ml_transfered, duration_s)
+
         MQTT.publish(client, od_feed, od_measured)
-        MQTT.publish(client, flow_rate_feed, ml_transfered)
+        MQTT.publish(client, flow_ml_transfered, ml_transfered)
         storage.store_data(utime.time() - start, od_measured, duration_s, ml_transfered)
     else:
         pump.off()
