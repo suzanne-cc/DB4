@@ -11,8 +11,9 @@ temp_sens = init_temp_sensor(THERMISTOR_PIN)
 speed = 10
 
 pump_duty = int(1023 * (speed / 100))
-pump.duty(pump_duty)
-print(f"speed: {speed}")
-utime.sleep(10) # 10 sec
-
-pump.duty(0)
+try:
+    pump.duty(pump_duty)
+    print(f"speed: {speed}")
+    utime.sleep(10) # 10 sec
+finally:
+    pump.duty(0)

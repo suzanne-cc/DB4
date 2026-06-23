@@ -7,7 +7,7 @@ import display
 
 # ---------- Pins ----------
 pump = Pin(OD_PUMP, Pin.OUT)
-pump.value(1)
+pump.off()
 
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
@@ -31,6 +31,7 @@ def measure_OD():
 
     pump.on()
     utime.sleep(TIME_TO_OD)
+    pump.off()
     print("measure start")
     led.on()
     utime.sleep(1)
