@@ -97,7 +97,14 @@ start = utime.time()
 
 while True:
     MQTT.check_messages(client)  # checks for any received updates
-    temp = read_temp(temp_sens) # reading temperature
+
+    temps = []
+    for _ in range(5):
+        temps.append(read_temp(temp_sens))
+        utime.sleep(0.1)
+
+    temp = sum(temps) / 5 # reading temperature
+
     display.update_temp(temp)
 
     pid = PID(temp) # control speed of cooler
