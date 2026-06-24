@@ -167,3 +167,4 @@ class SSD1306_SPI(SSD1306):
         self.res.low()
         time.sleep_ms(10)
         self.res.high()
+

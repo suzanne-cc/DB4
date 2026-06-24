@@ -165,3 +165,4 @@ class TCS34725:
     def html_hex(data):
         r, g, b = html_rgb(data)
         return "{0:02x}{1:02x}{2:02x}".format(int(r), int(g),int(b))
+

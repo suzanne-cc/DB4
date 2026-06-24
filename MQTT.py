@@ -4,12 +4,12 @@ from umqtt.robust import MQTTClient
 import os
 import sys
 
-WIFI_SSID = 'wifi_SSID'
-WIFI_PASSWORD = 'password'
+WIFI_SSID = 'suzanne'
+WIFI_PASSWORD = 'suzanne1201'
 
 ADAFRUIT_IO_URL = b'io.adafruit.com' 
-ADAFRUIT_USERNAME = b'username'
-ADAFRUIT_IO_KEY = b'key'
+ADAFRUIT_USERNAME = b'suzanne_cc'
+ADAFRUIT_IO_KEY = b'aio_MBut59NFkWgutoighj9UO2unalOg'
 
 def connect_wifi():
     # turn off the WiFi Access Point

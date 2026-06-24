@@ -13,7 +13,8 @@ temp_sens = init_temp_sensor(THERMISTOR_PIN)
 
 fan = Pin(FAN_PIN, Pin.OUT)
 peltier = Pin(PELTIER_PIN, Pin.OUT)
-pump = Pin(TEMP_PUMP, Pin.OUT)
+pump_pin = Pin(TEMP_PUMP, Pin.OUT)
+pump = PWM(pump_pin, freq=1000)
 
 # ----- Peltier Element -----
 def peltier_low():
@@ -22,15 +23,9 @@ def peltier_low():
 def peltier_high():
     peltier.on()
 
-# ----- Pump -----
-def pump_on():
-    pump.off()
-
-def pump_off():
-    pump.on()
-
+# ----- Initial States -----
 fan.off()
-pump_off()
+pump.duty(0)
 peltier_low()
 
 # ------- MQTT Setup -------
@@ -83,24 +78,25 @@ def PID(current_temp):
     global integral, prev_error, prev_time, Kp, Ki, Kd
 
     time_now = utime.ticks_ms()
-    dt = utime.ticks_diff(time_now, prev_time) / 1000.0
-    if dt <= 0:
+    dt = utime.ticks_diff(time_now, prev_time) / 1000.0 # difference between prev PID call and new one (in seconds)
+
+    if dt <= 0: # prevent division by zero
         dt = 0.001
 
-    error = current_temp - TARGET_TEMP  # positive = too hot = need more cooling
+    error = current_temp - TARGET_TEMP
 
-    integral += error * dt
-    integral = max(-100, min(100, integral))  # anti-windup
+    integral += error * dt # how long you've been off
+    integral = max(-100, min(100, integral))  # prevents windup
     derivative = (error - prev_error) / dt
 
-    P = Kp * error
-    I = Ki * integral
-    D = Kd * derivative
+    P = Kp * error # how far off right now
+    I = Ki * integral # how long you've been off
+    D = Kd * derivative # how fast it's changing
 
     prev_error, prev_time = error, time_now
 
     output = P + I + D
-    return max(0, min(100, output))  # clamped 0-100, used here for telemetry only
+    return output
 
 
 # ----- Cooling State -----
@@ -125,48 +121,38 @@ while True:
     display.update_temp(temperature)
 
     # --- PID computed for logging/telemetry, doesn't drive switching ---
-    duty_pct = PID(temperature)
-    display.update_PID(duty_pct)
+    duty = PID(temperature)
+    display.update_PID(duty)
 
     if not cooling_active:
 
         if temperature >= TARGET_TEMP + HYSTERESIS:
-
-            pump_on()
+            pump.duty(int(max(0, min(1023, duty))))
             peltier_high()
 
             cooling_active = True
             peltier_start_time = utime.ticks_ms()
-
             print("Cooling switched ON")
 
     else:
-
         current_time = utime.ticks_ms()
 
-        peltier_on_time = utime.ticks_diff(
-            current_time,
-            peltier_start_time
-        )
+        peltier_on_time = utime.ticks_diff(current_time, peltier_start_time)
 
-        minimum_time_reached = (
-            peltier_on_time >= MIN_PELTIER_ON_TIME_MS
-        )
+        minimum_time_reached = (peltier_on_time >= MIN_PELTIER_ON_TIME_MS)
 
         if temperature <= TARGET_TEMP and minimum_time_reached:
-
             peltier_low()
-            pump_off()
+            pump.duty(0)
 
             cooling_active = False
-
             print("Cooling switched OFF")
 
     # --- publish to Adafruit IO only every PUBLISH_INTERVAL_MS ---
     now = utime.ticks_ms()
     if utime.ticks_diff(now, last_publish_time) >= PUBLISH_INTERVAL_MS:
         MQTT.publish(client, feed_temp, temperature)
-        MQTT.publish(client, feed_pid, duty_pct)
+        MQTT.publish(client, feed_pid, duty)
         storage.store_data(utime.time() - start, temperature)
         last_publish_time = now
 
