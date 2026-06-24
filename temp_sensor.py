@@ -2,7 +2,7 @@ from machine import Pin, ADC, PWM, I2C
 import utime
 from provided_code.read_temp import init_temp_sensor, read_temp
 import MQTT
-from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN
+from pin_configuration import TEMP_PUMP, THERMISTOR_PIN, SCL_PIN, SDA_PIN, FAN_PIN, PELTIER_PIN
 import display
 import storage
 from variables import *
@@ -12,6 +12,24 @@ i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=100000)
 pump_pin = Pin(TEMP_PUMP, Pin.OUT)
 pump = PWM(pump_pin, freq=1000)
 temp_sens = init_temp_sensor(THERMISTOR_PIN)
+
+fan = Pin(FAN_PIN, Pin.OUT)
+peltier = Pin(PELTIER_PIN, Pin.OUT)
+pump = Pin(TEMP_PUMP, Pin.OUT)
+
+
+# ----- Peltier Element Initilization -----
+def peltier_low():
+    peltier.off()
+
+def peltier_high():
+    peltier.on()
+
+fan.off() # initial state
+pump.off()
+
+cooling_active = False
+peltier_start_time = 0
 
 # ------- MQTT Setup -------
 MQTT.connect_wifi()
@@ -98,18 +116,33 @@ start = utime.time()
 while True:
     MQTT.check_messages(client)  # checks for any received updates
 
+    # reads temperature
     temps = []
     for _ in range(5):
         temps.append(read_temp(temp_sens))
         utime.sleep(0.1)
-
     temp = sum(temps) / 5 # reading temperature
-
     display.update_temp(temp)
 
-    pid = PID(temp) # control speed of cooler
-    pump.duty(int(max(0, min(1023, pid))))
-    display.update_PID(pid)
+    if not cooling_active:
+        if temp >= TARGET_TEMP + HYSTERESIS:
+            peltier_high()
+
+            pid = PID(temp) # control speed of cooler
+            pump.duty(int(max(0, min(1023, pid))))
+            print("Cooling switched ON")
+            display.update_PID(pid)
+    else:
+        if temp <= TARGET_TEMP:
+            peltier_low()
+
+            pid = PID(temp) # control speed of cooler
+            pump.duty(int(max(0, min(1023, pid))))
+            print("Cooling switched ON")
+            display.update_PID(pid)
+
+            cooling_active = False
+            print("Cooling switched OFF")
 
     MQTT.publish(client, feed_temp, temp) # publish temperature data to adaFruit
     MQTT.publish(client, feed_pid, pid) # publish PID data to adaFruit

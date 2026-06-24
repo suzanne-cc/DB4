@@ -9,6 +9,11 @@ INITIAL_CONCENTRATION = 320000  ## Matilde check again...
 TIME_TO_OD = 1  ## ask TA Matilde
 PUMP_ML_PER_SEC = 10  ## run test
 
+# ----- COOLING SYSTEM -----
+HYSTERESIS = 0.2
+MIN_PELTIER_ON_TIME_MS = 2000 # Peltier must remain on for at least this amount of time
+SAMPLE_TIME_MS = 1000 # Time between temperature measurements
+
 # ------ Default Values ------
 TARGET_ALGAE = 1.0e9
 TARGET_TEMP = 18.0
