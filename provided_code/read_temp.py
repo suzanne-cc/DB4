@@ -42,7 +42,14 @@ def read_temp(temp_sens):
     steinhart  = log(resistance / NOM_RES) / THERM_B_COEFF
     steinhart += 1.0 / (TEMP_NOM + 273.15)
     steinhart  = (1.0 / steinhart) - 273.15
-    return steinhart
+
+    # Apply calibration from the reference thermometer
+    corrected_temperature = 0.8535 * steinhart + 7.5834
+
+    print("Raw thermistor temperature: {:.2f} C".format(steinhart))
+    print("Corrected temperature: {:.2f} C".format(corrected_temperature))
+
+    return corrected_temperature
 
 print("I'm alive!\n")
 utime.sleep_ms(2000)

@@ -40,4 +40,11 @@ def show_quick_overview(OD_measurement, Volume_Transfered, pump_duration):
     oled.text("Flow: {:.1f} ml".format(Volume_Transfered), 0, 40)
     oled.text("Pump: {:.1f} s".format(pump_duration), 0, 48)
     oled.show()
-    
+
+def show_thermistor_status(temp, pump_speed, pump_duty, rate):
+    oled.fill(0)
+    oled.text("Temp: {:.1f} C".format(temp), 0, 0)
+    oled.text("PID: {:.1f}".format(pump_speed), 0, 16)
+    oled.text("Duty: {}".format(pump_duty), 0, 32)
+    oled.text("Flow: {:.1f}".format(rate), 0, 48)
+    oled.show()
