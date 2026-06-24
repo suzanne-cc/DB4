@@ -13,6 +13,7 @@ PUMP_ML_PER_SEC = 10  ## run test
 HYSTERESIS = 0.2
 MIN_PELTIER_ON_TIME_MS = 2000 # Peltier must remain on for at least this amount of time
 SAMPLE_TIME_MS = 1000 # Time between temperature measurements
+WINDOW = 10.0  # seconds per control cycle
 
 # ------ Default Values ------
 TARGET_ALGAE = 1.0e9
