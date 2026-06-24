@@ -24,10 +24,10 @@ def peltier_high():
 
 # ----- Pump -----
 def pump_on():
-    pump.on()
+    pump.off()
 
 def pump_off():
-    pump.off()
+    pump.on()
 
 fan.off()
 pump_off()
@@ -107,7 +107,7 @@ def PID(current_temp):
 cooling_active = False
 peltier_start_time = 0
 
-storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]", "PID"])
+storage.init_csv("Temperature_Regulator", ["Time [s]", "Measured Temperature [C]"])
 start = utime.time()
 
 PUBLISH_INTERVAL_MS = 10000
@@ -167,7 +167,7 @@ while True:
     if utime.ticks_diff(now, last_publish_time) >= PUBLISH_INTERVAL_MS:
         MQTT.publish(client, feed_temp, temperature)
         MQTT.publish(client, feed_pid, duty_pct)
-        storage.store_data(utime.time() - start, temperature, duty_pct)
+        storage.store_data(utime.time() - start, temperature)
         last_publish_time = now
 
     utime.sleep(1)  # control loop stays responsive; publishing is throttled separately

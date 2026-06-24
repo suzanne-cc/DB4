@@ -7,8 +7,9 @@ CLEAR_OD_READING = 15972.4
 INITIAL_CONCENTRATION = 320000  ## Matilde check again...
 
 TIME_TO_OD = 1  ## ask TA Matilde
-PUMP_ML_PER_SEC = 10  ## run test
+PUMP_ML_PER_SEC = 11.4  ## run test
 
+TARGET_OD = 310000
 # ----- COOLING SYSTEM -----
 HYSTERESIS = 0.2
 MIN_PELTIER_ON_TIME_MS = 2000 # Peltier must remain on for at least this amount of time
@@ -18,4 +19,5 @@ WINDOW = 10.0  # seconds per control cycle
 # ------ Default Values ------
 TARGET_ALGAE = 1.0e9
 TARGET_TEMP = 18.0
+DEFAULT_DURATION = 1.5 #sec
 Kp, Ki, Kd = 10.0, 0.1, 1.0

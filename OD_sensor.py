@@ -9,14 +9,21 @@ from variables import *
 import display
 
 # ---------- Pins ----------
-pump = Pin(OD_PUMP, Pin.OUT)
-pump.value(1)
+pump_pin = Pin(OD_PUMP, Pin.OUT)
+pump = PWM(pump_pin, frequency=1000)
 
 i2c = I2C(1, scl=Pin(SCL_PIN), sda=Pin(SDA_PIN), freq=1000)
 OD_sensor = TCS34725(i2c)
 OD_sensor.integration_time(500.4)
 OD_sensor.gain(60)
 led = Pin(LED_PIN, Pin.OUT)
+
+# ----- Pump Settings ----
+def pump_on():
+    pump.duty(511.5)
+
+def pump_off():
+    pump.duty(0)
 
 # ------- MQTT Setup -------
 MQTT.connect_wifi()
@@ -43,7 +50,7 @@ MQTT.subscribe(client, feed_target_algae, on_message)
 # ----- Measure OD Value -----
 def measure_OD():
     print("measure start")
-    pump.on()
+    pump_on()
     utime.sleep(TIME_TO_OD)
 
     led.on()
@@ -62,15 +69,19 @@ def od_to_algae_concentration(od):
 last_feed = utime.time()
 
 def pump_duration_from_od(feed_od):
-    global last_feed
+    global last_feed, DEFAULT_DURATION
     feed_conc = od_to_algae_concentration(feed_od)
-    if feed_conc <= 0:
-        return 0
 
-    total_algae = INITIAL_CONCENTRATION - (CLEARING_RATE_ML_SEC * (utime.time() - last_feed))
-    algae_needed = TARGET_ALGAE - total_algae
-    flow_ml = algae_needed / feed_conc        # ml needed
-    duration_s = flow_ml / (PUMP_ML_PER_SEC)  # seconds to run
+    correction_factor = TARGET_OD / feed_od
+
+    if feed_conc <= 0:
+        print("Warning: Algae Concentration is too low, add algae")
+    if 0 < feed_conc < 170000 or feed_conc > 350000:
+        duration_s = DEFAULT_DURATION * correction_factor
+    if feed_conc > 600000:
+        print("Warning: Algae Concentration is too high, add fresh water")
+    else:
+        duration_s = DEFAULT_DURATION
 
     last_feed = utime.time()
     return max(0, duration_s)
@@ -87,9 +98,9 @@ while True:
     if od_measured is not None:
         duration_s = pump_duration_from_od(od_measured)
 
-        pump.on()
+        pump_on()
         utime.sleep(duration_s)   # run for calculated duration
-        pump.off()             # then stop
+        pump_off()             # then stop
 
         ml_transfered = duration_s * PUMP_ML_PER_SEC
 
@@ -99,6 +110,6 @@ while True:
         MQTT.publish(client, flow_ml_transfered, ml_transfered)
         storage.store_data(utime.time() - start, od_measured, duration_s, ml_transfered)
     else:
-        pump.off()
+        pump_off()
 
     utime.sleep(60)
